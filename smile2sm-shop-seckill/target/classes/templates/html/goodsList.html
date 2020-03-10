@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<table title="抢购商品列表">
+<thead>
+	<tr>
+		<td>序号<td>
+		<td>商品名称<td>
+		<td>图片<td>
+		<td>原价<td>
+		<td>抢购价<td>
+		<td>抢购数量<td>
+		<td>开始时间<td>
+		<td>结束时间<td>
+	</tr>
+	</thead>
+	<tbody>
+	<tr th:each="goods,goodsStat: ${goodsList}">
+    	<td th:text="${goodsStat.count}"></td>
+    	<td th:text="${goods.goods_name}"></td>
+    	<td th:text="${goods.goods_name}"></td>
+    	<td th:text="${goods.goods_price}"></td>
+    	<td th:text="${goods.seckill_price}"></td>
+    	<td th:text="${goods.seckill_num}"></td>
+    	<td th:text="${#dates.format(goods.seckill_start_time, 'yyyy-MM-dd hh:mm:ss')}"></td>
+    	<td th:text="${#dates.format(goods.seckill_end_time,'yyyy-MM-dd hh:mm:ss')}"></td>
+	</tr>
+	</tbody>
+</table>
+
+</body>
+</html>
