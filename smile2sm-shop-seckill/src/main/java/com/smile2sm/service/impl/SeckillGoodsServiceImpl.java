@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.smile2sm.config.MQConfig;
 import com.smile2sm.config.MqConfig;
 import com.smile2sm.constant.RedisKey;
 import com.smile2sm.dao.SeckillGoodsDao;
@@ -120,7 +121,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 		} else {
 			jedis.close();
 			// 进入待秒杀队列，进行后续串行操作
-			sender.send(MqConfig.QUEUE, seckillId+","+phone);
+			sender.send(MQConfig.SECKILL_QUEUE, seckillId+","+phone);
 
 			return new SeckillState(SeckillStateEnum.ENQUEUE_PRE_SECKILL);
 		}
