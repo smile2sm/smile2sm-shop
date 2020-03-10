@@ -5,6 +5,7 @@ import com.smile2sm.enums.SeckillStateEnum;
 /**
  * 秒杀相关业务异常
  */
+@SuppressWarnings("serial")
 public class SeckillException extends RuntimeException {
 
     private SeckillStateEnum seckillStateEnum;

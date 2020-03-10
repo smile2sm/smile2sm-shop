@@ -5,59 +5,48 @@ package com.smile2sm.enums;
  */
 public enum SeckillStateEnum {
 	
-    ENQUEUE_PRE_SECKILL(6, "排队中..."),
-    /**
-     * 释放分布式锁失败，抢购失败
-     */
-    DISTLOCK_RELEASE_FAILED(5, "没抢到"),
-    /**
-     * 获取分布式锁失败，抢购失败
-     */
-    DISTLOCK_ACQUIRE_FAILED(4, "没抢到"),
+    SECKILL_SUCCESS(0, "秒杀成功"),
+    
+    USER_LOGOUT(50000,"没有登录"),
 
-    /**
-     * Redis秒杀没抢到
-     */
-    REDIS_ERROR(3, "没抢到"),
-    SOLD_OUT(2, "已售罄"),
-    SUCCESS(1, "抢购成功"),
-    END(0, "抢购已结束"),
-    REPEAT_KILL(-1, "重复抢购"),
-    /**
-     * 运行时才能检测到的所有异常-系统异常
-     */
-    INNER_ERROR(-2, "没抢到"),
-    /**
-     * md5错误的数据篡改
-     */
-    DATA_REWRITE(-3, "数据篡改"),
+    SECKILL_OUT(50001, "已售罄"),
+    
+    REDIS_ERROR(50002, "没秒杀到"),
+    
+    ENQUEUE_PRE_SECKILL(50003, "排队中..."),
+    
+    SECKILL_END(50004, "秒杀已结束"),
+    
+    REPEAT_KILL(50005, "重复秒杀"),
+    
+    ACCESS_LIMIT(50006, "没抢到"),
+	
+	RUNTIME_ERROR(50007, "没秒杀到");
 
-    DB_CONCURRENCY_ERROR(-4, "没抢到"),
-    /**
-     * 被AccessLimitService限流了
-     */
-    ACCESS_LIMIT(-5, "没抢到");
-
-
-    private int state;
-    private String stateInfo;
-
-    SeckillStateEnum(int state, String stateInfo) {
-        this.state = state;
-        this.stateInfo = stateInfo;
-    }
-
-    public int getState() {
-        return state;
-    }
-
-    public String getStateInfo() {
-        return stateInfo;
-    }
-
-    public static SeckillStateEnum stateOf(int index) {
+    private int code;
+    private String msg;
+    
+    SeckillStateEnum(int code, String msg) {
+		this.code = code;
+		this.msg = msg;
+	}
+    
+	public int getCode() {
+		return code;
+	}
+	public void setCode(int code) {
+		this.code = code;
+	}
+	public String getMsg() {
+		return msg;
+	}
+	public void setMsg(String msg) {
+		this.msg = msg;
+	}
+	
+	public static SeckillStateEnum stateOf(int index) {
         for (SeckillStateEnum state : values()) {
-            if (state.getState() == index) {
+            if (state.code == index) {
                 return state;
             }
         }
