@@ -3,11 +3,13 @@ package com.smile2sm.entity;
 import java.util.Date;
 
 public class SeckillGoods extends Goods{
+	
 	private int seckill_id;
 	private int seckill_num;
 	private double seckill_price;
 	private Date seckill_start_time;
 	private Date seckill_end_time;
+	
 	public int getSeckill_id() {
 		return seckill_id;
 	}

@@ -11,6 +11,7 @@ public class MQProducer {
 	AmqpTemplate amqpTemplate;
 	
 	public void send(String routingKey,Object message) {
+		
 		try {
 			amqpTemplate.convertAndSend(routingKey, message);
 		} catch (Exception e) {

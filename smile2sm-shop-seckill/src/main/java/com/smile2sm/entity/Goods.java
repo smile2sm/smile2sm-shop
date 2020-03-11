@@ -7,7 +7,6 @@ public class Goods {
 	private String  goods_img;
 	private String goods_detail;
 	private double goods_price;
-	private int goods_stock;
 	
 	public long getGoods_id() {
 		return goods_id;
@@ -38,11 +37,5 @@ public class Goods {
 	}
 	public void setGoods_price(double goods_price) {
 		this.goods_price = goods_price;
-	}
-	public int getGoods_stock() {
-		return goods_stock;
-	}
-	public void setGoods_stock(int goods_stock) {
-		this.goods_stock = goods_stock;
 	}
 }

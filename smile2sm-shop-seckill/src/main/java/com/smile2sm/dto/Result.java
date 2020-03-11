@@ -1,11 +1,17 @@
 package com.smile2sm.dto;
 
+import com.smile2sm.enums.SeckillStateEnum;
+
 @SuppressWarnings("all")
 public class Result<T> {
 
 	private int code;
 	private String msg;
 	private T data;
+	
+	public static <T> Result setResult(SeckillStateEnum seckillStateEnum) {
+		return new Result(seckillStateEnum.getCode(),seckillStateEnum.getMsg());
+	}
 	
 	public static <T> Result success(T data) {
 		return new Result(0,"success",data);

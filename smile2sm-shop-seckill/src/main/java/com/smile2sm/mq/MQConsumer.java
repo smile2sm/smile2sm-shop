@@ -6,11 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.smile2sm.config.MQConfig;
-import com.smile2sm.config.MqConfig;
-import com.smile2sm.constant.RedisKey;
-
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import com.smile2sm.service.SeckillGoodsService;
 
 @Component
 public class MQConsumer {
@@ -19,19 +15,16 @@ public class MQConsumer {
 	AmqpTemplate amqpTemplate;
 	
 	@Autowired
-	JedisPool jedisPool;
+	SeckillGoodsService seckillGoodsService;
 	
 	@RabbitListener(queues = MQConfig.SECKILL_QUEUE)
 	public void receive(String msgBody) {
 		
 		String[] split = msgBody.split(",");
-		Jedis jedis = jedisPool.getResource();
-		String skillStockKey = RedisKey.SECKILL_STOCK + split[0];
-		Long decr = jedis.decr(skillStockKey);
-		if(decr <= 0) {
-			return;
+		try {
+			seckillGoodsService.handleInRedis(Long.parseLong(split[0]), split[1]);
+		}catch (Exception e) {
+			
 		}
-		
-		jedis.set("", "");
 	}
 }

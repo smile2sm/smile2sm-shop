@@ -29,7 +29,10 @@ public class MQConfig {
 	 * */
 	@Bean
 	public Queue queue() {
-		return new Queue(SECKILL_QUEUE, true);
+		Queue queue2 = new Queue(SECKILL_QUEUE, true);
+		
+		
+		return queue2;
 	}
 	
 	/**
