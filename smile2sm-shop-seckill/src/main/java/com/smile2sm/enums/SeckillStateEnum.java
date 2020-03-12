@@ -25,7 +25,10 @@ public enum SeckillStateEnum{
 	
 	ORDER_ERROR(50008, "不存在订单"),
 	
-	CREATE_ORDER_ERROR(50009, "支付失败");
+	CREATE_ORDER_ERROR(50009, "创建订单失败"),
+	
+	MD5_ERROR(50010, "数据篡改");
+	
 
     private int code;
     private String msg;

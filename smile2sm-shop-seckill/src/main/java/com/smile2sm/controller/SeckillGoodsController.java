@@ -26,6 +26,7 @@ public class SeckillGoodsController {
 	@Autowired
 	SeckillGoodsService seckillGoodsService;
 	
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/time/now", method = RequestMethod.GET)
     @ResponseBody
     public Result<Long> time() {
@@ -50,6 +51,7 @@ public class SeckillGoodsController {
 		return "html/goodsDetail";
 	}
 	
+	@SuppressWarnings("unchecked")
 	@RequestMapping("exposer/{seckill_id}")
 	@ResponseBody
 	public Result<SeckillExposer> getSeckillUrl(@PathVariable long seckill_id) {
@@ -57,6 +59,7 @@ public class SeckillGoodsController {
 		return Result.success(exposer);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@ResponseBody
 	@RequestMapping("executeSeckill/{seckill_id}/{phone}")
 	@ExtRateLimiter(permitsPerSecond = 2,timeout = 2)
@@ -75,6 +78,7 @@ public class SeckillGoodsController {
 		return Result.setResult(seckillStateEnum);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@ResponseBody
 	@RequestMapping("isGrab/{seckill_id}/{phone}")
 	public Result isGrab(@PathVariable long seckill_id,@PathVariable String phone) {

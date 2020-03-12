@@ -78,10 +78,12 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 	 */
 	@Override
 	public SeckillExposer exposer(long seckill_id) {
+		
+		//读取出redis中对应seckill_id的商品数据
 		Jedis jedis = jedisPool.getResource();
 		String string = jedis.get(RedisKey.SECKILL_ID+seckill_id);
 		jedis.close();
-		
+		//数据为空，秒杀没准备好或者数据已被删除
 		if(StringUtils.isEmpty(string)) return new SeckillExposer(false, seckill_id);
 		
 		SeckillGoods seckillGoods = JSON.parseObject(string, SeckillGoods.class);
@@ -94,7 +96,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 			return new SeckillExposer(false, seckill_id, start_time, end_time, now);
 		}
 		
-		return new SeckillExposer(true, seckill_id,"executeSeckill");
+		return new SeckillExposer(true, seckill_id,getMd5());
 	}
 	
 	/**
