@@ -1,6 +1,6 @@
-# smilm2sm-shop
+### smilm2sm-shop
 
-## 1.总体架构
+### 1.总体架构
 
 系统部署图
 <br/><br/><br/><br/>
@@ -21,7 +21,7 @@
 通过nginx反向代理，对外只暴露80端口。同时配置nginx的负载均衡，使用多个tomcat节点<br/>
 实现负载均衡。 负载均衡策略按照服务器性能使用权重分配。
 
-## 2.后端暴露秒杀接口
+### 2.后端暴露秒杀接口
 后端暴露接口的作用是：当秒杀时间开始后，才暴露每个商品的md5，只有拿到md5值，才能形成有效的秒杀请求.<br/>
 秒杀时间段结束后，此接口不再返回md5值.
 <br/>
@@ -51,9 +51,9 @@
 	}
 ```
 
-## 3.后端秒杀处理
+### 3.后端秒杀处理
 
-### 3.1 限流降级
+#### 3.1 限流降级
 使用Google guava的RateLimiter来进行限流 <br/>
 使用AOP切面编程技术封装ExtRateLimiter限流注解，在令牌桶没拿到令牌的请求直接调用降级fallback方法<br/>
 RateLimiterAop.java代码 <br/>
@@ -123,7 +123,7 @@ RateLimiterAop.java代码 <br/>
 	}
 ```
 
-### 3.2 Redis执行秒杀
+#### 3.2 Redis执行秒杀
 
 秒杀步骤流程图
 
@@ -179,7 +179,7 @@ public void handleInRedis(long seckill_id, String phone,String md5) throws Secki
 5.流程图Step2：客户端排队成功后，定时请求后台查询是否秒杀成功，后面会去查询Redis是否秒杀成功 <br/>
 
 
-### 3.3 付款后实际减库存
+#### 3.3 付款后实际减库存
 
 1.判断是否秒杀到商品，没秒杀到，异常订单<br/>
 2.创建订单，如失败，则可能是重复提交<br/>
