@@ -4,7 +4,7 @@
 
 系统部署图
 <br/><br/><br/><br/>
-![image](https://github.com/smile2sm/smile2sm-shop/blob/master/doc/image/img.png)
+![image](https://github.com/smile2sm/smile2sm-shop/blob/master/doc/image/img1.png)
 <br/>
 <br/>
 
