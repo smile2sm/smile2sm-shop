@@ -47,7 +47,7 @@ public SeckillExposer exposer(long seckill_id) {
 		return new SeckillExposer(false, seckill_id, start_time, end_time, now);
 	}
 	//输出对应的md5值
-	return new SeckillExposer(true, seckill_id,getMd5(seckill_id));
+	return new SeckillExposer(true, seckill_id,MD5Util.getMd5(seckill_id));
 }
 ```
 
@@ -135,7 +135,7 @@ RateLimiterAop.java代码 <br/>
 public SeckillStateEnum executeSeckill(long seckill_id, String phone,String md5) throws SeckillException{
 		
 		//验证数据是否被篡改
-		if((!StringUtils.isEmpty(md5))&& (getMd5(seckill_id)).equals(md5)) {
+		if(MD5Util.getMd5(seckill_id).equals(md5)) {
 			throw new SeckillException(SeckillStateEnum.MD5_ERROR);
 		}
 		
