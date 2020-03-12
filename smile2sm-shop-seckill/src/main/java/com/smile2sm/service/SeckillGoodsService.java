@@ -2,8 +2,7 @@ package com.smile2sm.service;
 
 import java.util.List;
 
-import com.smile2sm.dto.SeckillState;
-import com.smile2sm.entity.SeckillExposer;
+import com.smile2sm.dto.SeckillExposer;
 import com.smile2sm.entity.SeckillGoods;
 import com.smile2sm.enums.SeckillStateEnum;
 import com.smile2sm.exception.SeckillException;
@@ -14,7 +13,7 @@ public interface SeckillGoodsService {
 	
 	SeckillGoods getSeckillGoodsDetail(long goods_id);
 	
-	SeckillStateEnum executeSeckill(long seckillId,String phone);
+	SeckillStateEnum executeSeckill(long seckill_id,String phone);
 
 	void handleInRedis(long seckillId, String phone) throws SeckillException;
 
@@ -22,5 +21,6 @@ public interface SeckillGoodsService {
 
 	SeckillStateEnum isGrab(long seckill_id, String phone);
 
-	//SeckillExecution updateInventory(long seckillId, String phone) throws SeckillException;
+	void updateStock(long seckill_id, String phone) throws SeckillException;
+
 }

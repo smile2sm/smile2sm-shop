@@ -7,15 +7,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.smile2sm.config.MQConfig;
 import com.smile2sm.constant.RedisKey;
+import com.smile2sm.dao.PayOrderDao;
 import com.smile2sm.dao.RedisDao;
 import com.smile2sm.dao.SeckillGoodsDao;
-import com.smile2sm.dto.SeckillState;
-import com.smile2sm.entity.SeckillExposer;
+import com.smile2sm.dto.SeckillExposer;
 import com.smile2sm.entity.SeckillGoods;
 import com.smile2sm.enums.SeckillStateEnum;
 import com.smile2sm.exception.SeckillException;
@@ -33,6 +34,9 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 	
 	@Autowired
 	SeckillGoodsDao seckillGoodsDao;
+	
+	@Autowired
+	PayOrderDao payOrderDao;
 	
 	@Autowired
 	RedisDao redisDao;
@@ -58,7 +62,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 	public SeckillGoods getSeckillGoodsDetail(long seckill_id) {
 		
 		Jedis jedis = jedisPool.getResource();
-		String string = jedis.get("SECKILL_GOODS_ID:"+seckill_id);
+		String string = jedis.get(RedisKey.SECKILL_ID+seckill_id);
 		
 		if(!StringUtils.isEmpty(string)) {
 			SeckillGoods seckillGoods = JSON.parseObject(string, SeckillGoods.class);
@@ -69,10 +73,13 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 		}
 		return null;
 	}
+	/**
+	 * 暴露秒杀地址
+	 */
 	@Override
 	public SeckillExposer exposer(long seckill_id) {
 		Jedis jedis = jedisPool.getResource();
-		String string = jedis.get("SECKILL_GOODS_ID:"+seckill_id);
+		String string = jedis.get(RedisKey.SECKILL_ID+seckill_id);
 		jedis.close();
 		
 		if(StringUtils.isEmpty(string)) return new SeckillExposer(false, seckill_id);
@@ -93,73 +100,75 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 	/**
 	 * 执行秒杀
 	 */
-	public SeckillStateEnum executeSeckill(long seckillId, String phone){
+	public SeckillStateEnum executeSeckill(long seckill_id, String phone){
 		
 		Jedis jedis = jedisPool.getResource();
 		
-		String StockStr = jedis.get(RedisKey.SECKILL_STOCK + seckillId);
+		String StockStr = jedis.get(RedisKey.SECKILL_STOCK + seckill_id);
 		
 		int skillStock = Integer.valueOf(StockStr);
 		
 		if (skillStock <= 0) {
 			jedis.close();
-			logger.info("SECKILLSOLD_OUT. seckillId={},userPhone={}", seckillId, phone);
+			logger.info("SECKILL_OUT. seckill_id={},phone={}", seckill_id, phone);
 			return SeckillStateEnum.SECKILL_OUT;
 		}
 		
-		if (jedis.sismember(RedisKey.SECKILL_USERS + seckillId, String.valueOf(phone))) {
+		if (jedis.sismember(RedisKey.SECKILL_USERS + seckill_id, String.valueOf(phone))) {
 			jedis.close();
 			// 重复秒杀
-			logger.info("SECKILL_REPEATED. seckillId={},userPhone={}", seckillId, phone);
-			return SeckillStateEnum.REPEAT_KILL;
+			logger.info("SECKILL_REPEAT. seckill_id={},phone={}", seckill_id, phone);
+			return SeckillStateEnum.SECKILL_REPEAT;
 		} else {
 			jedis.close();
 			// 进入待秒杀队列，进行后续串行操作
-			logger.info("ENQUEUE_PRE_SECKILL. seckillId={},userPhone={}", seckillId, phone);
+			logger.info("SECKILL_QUEUE. seckill_id={},phone={}", seckill_id, phone);
 			
-			mQProducer.send(MQConfig.SECKILL_QUEUE, seckillId+","+phone);
+			mQProducer.send(MQConfig.SECKILL_QUEUE, seckill_id+","+phone);
 
-			return SeckillStateEnum.ENQUEUE_PRE_SECKILL;
+			return SeckillStateEnum.SECKILL_QUEUE;
 		}
 	}
 
 
 	/**
-	 * 在Redis中真正进行秒杀操作
-	 * 
+	 * 在Redis中进行秒杀处理
 	 */
 	@Override
-	public void handleInRedis(long seckillId, String phone) throws SeckillException {
+	public void handleInRedis(long seckill_id, String phone) throws SeckillException {
 		Jedis jedis = jedisPool.getResource();
 
-		String inventoryKey = RedisKey.SECKILL_STOCK + seckillId;
-		String boughtKey = RedisKey.SECKILL_USERS + seckillId;
+		String stockKey = RedisKey.SECKILL_STOCK + seckill_id;
+		String boughtKey = RedisKey.SECKILL_USERS + seckill_id;
 
-		String inventoryStr = jedis.get(inventoryKey);
-		int inventory = Integer.valueOf(inventoryStr);
-		if (inventory <= 0) {
-			logger.info("handleInRedis SECKILLSOLD_OUT. seckillId={},userPhone={}", seckillId, phone);
+		String stockStr = jedis.get(stockKey);
+		int skillStock = Integer.valueOf(stockStr);
+		
+		//判断是否重复秒杀
+		if (jedis.sismember(boughtKey, phone)) {
+			jedis.close();
+			logger.info("handleInRedis SECKILL_REPEAT. seckill_id={},phone={}", seckill_id, phone);
+			throw new SeckillException(SeckillStateEnum.SECKILL_REPEAT);
+		}
+		//判断是否还有库存
+		if (skillStock <= 0) {
+			jedis.close();
+			logger.info("handleInRedis SECKILL_OUT. seckill_id={},phone={}", seckill_id, phone);
 			throw new SeckillException(SeckillStateEnum.SECKILL_OUT);
 		}
-		if (jedis.sismember(boughtKey, phone)) {
-			logger.info("handleInRedis SECKILL_REPEATED. seckillId={},userPhone={}", seckillId, phone);
-			throw new SeckillException(SeckillStateEnum.REPEAT_KILL);
-		}
-		jedis.decr(inventoryKey);
+		//存在问题：当前库存减一，而添加秒杀成功没有时失败了该怎么处理
+		jedis.decr(stockKey);
 		jedis.sadd(boughtKey, String.valueOf(phone));
-		logger.info("handleInRedis_done--->"+phone);
+		jedis.close();
+		logger.info("handleInRedis SECKILL_SUCCESS. seckill_id={},phone={}", seckill_id, phone);
 	}
 
 	
-	 /**
-    *
-    * @param seckillId
-    * @param userPhone
-    * @return 0： 排队中; 1: 秒杀成功; 2： 秒杀失败
+	/**
+    * 定时轮询秒杀结果
     */
    @Override
    public SeckillStateEnum isGrab(long seckill_id, String phone) {
-       int result = 0 ;
 
        Jedis jedis = jedisPool.getResource();
        try {
@@ -169,10 +178,10 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
            };
        } catch (Exception ex) {
            logger.error(ex.getMessage(), ex);
-           result = 0;
        }
        
-       return SeckillStateEnum.ENQUEUE_PRE_SECKILL;
+       //问题：如何判断没有秒杀到呢
+       return SeckillStateEnum.SECKILL_QUEUE;
    }
 	
 	
@@ -182,65 +191,43 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 	/**
 	 * 先插入秒杀记录再减库存
 	 */
-//	@Override
-//	@Transactional
-//	public SeckillExecution updateInventory(long seckillId, String phone) throws SeckillException {
-//		// 执行秒杀逻辑:减库存 + 记录购买行为
-//		Date nowTime = new Date();
-//		try {
-//			// 插入秒杀记录(记录购买行为)
-//			// 这处， seckill_record的id等于这个特定id的行被启用了行锁, 但是其他的事务可以insert另外一行，
-//			// 不会阻止其他事务里对这个表的insert操作
-//			int insertCount = payOrderDAO.insertPayOrder(seckillId, phone, nowTime);
-//			// 唯一:seckillId,userPhone
-//			if (insertCount <= 0) {
-//				// 重复秒杀
-//				logger.info("seckill REPEATED. seckillId={},userPhone={}", seckillId, phone);
-//				throw new SeckillException(SeckillStateEnum.REPEAT_KILL);
-//			} else {
-//				// 减库存,热点商品竞争
-//				// reduceNumber是update操作，开启作用在表seckill上的行锁
-//				Seckill currentSeckill = seckillDAO.queryById(seckillId);
-//				boolean validTime = false;
-//				if (currentSeckill != null) {
-//					long nowStamp = nowTime.getTime();
-//					if (nowStamp > currentSeckill.getStartTime().getTime()
-//							&& nowStamp < currentSeckill.getEndTime().getTime() && currentSeckill.getInventory() > 0
-//							&& currentSeckill.getVersion() > -1) {
-//						validTime = true;
-//					}
-//				}
-//
-//				if (validTime) {
-//					long oldVersion = currentSeckill.getVersion();
-//					// update操作开始，表seckill的seckill_id等于seckillId的行被启用了行锁, 其他的事务无法update这一行，
-//					// 可以update其他行
-//					int updateCount = seckillDAO.reduceInventory(seckillId, oldVersion, oldVersion + 1);
-//					if (updateCount <= 0) {
-//						// 没有更新到记录，秒杀结束,rollback
-//						logger.info("seckill_DATABASE_CONCURRENCY_ERROR!!!. seckillId={},userPhone={}", seckillId,
-//								phone);
-//						throw new SeckillException(SeckillStateEnum.DB_CONCURRENCY_ERROR);
-//					} else {
-//						// 秒杀成功 commit
-//						PayOrder payOrder = payOrderDAO.queryByIdWithSeckill(seckillId, userPhone);
-//						logger.info("seckill SUCCESS->>>. seckillId={},userPhone={}", seckillId, userPhone);
-//						return new SeckillExecution(seckillId, SeckillStateEnum.SUCCESS, payOrder);
-//						// return后，事务结束，关闭作用在表seckill上的行锁
-//						// update结束，行锁被取消 。reduceInventory()被执行前后数据行被锁定, 其他的事务无法写这一行。
-//					}
-//				} else {
-//					logger.info("seckill_END. seckillId={},userPhone={}", seckillId, userPhone);
-//					throw new SeckillException(SeckillStateEnum.END);
-//				}
-//			}
-//		} catch (SeckillException e1) {
-//			throw e1;
-//		} catch (Exception e) {
-//			logger.error(e.getMessage(), e);
-//			// 所有编译期异常 转化为运行期异常
-//			throw new SeckillException(SeckillStateEnum.INNER_ERROR);
+	@Override
+	@Transactional
+	public void updateStock(long seckill_id, String phone) throws SeckillException {
+		Jedis jedis = jedisPool.getResource();
+		String boughtKey = RedisKey.SECKILL_USERS + seckill_id;
+		//判断是否秒杀到
+		if (!jedis.sismember(boughtKey, phone)) {
+			jedis.close();
+			logger.info("updateStock ORDER_ERROR. seckill_id={},phone={}", seckill_id, phone);
+			//没秒杀到，异常订单
+			throw new SeckillException(SeckillStateEnum.ORDER_ERROR);
+		}
+		jedis.close();
+		
+//		//判断是否已经插入订单
+//		PayOrder payOrder = payOrderDao.getPayOrder(seckill_id, phone);
+//		if(!StringUtils.isEmpty(payOrder)) {
+//			//已经创建订单
+//			logger.info("updateStock CREATE_ORDER_SUCCESS. seckill_id={},phone={}", seckill_id, phone);
+//			return ;
 //		}
-//	}
+//		
+		//插入订单
+		int result = payOrderDao.insertPayOrder(seckill_id, phone,1, new Date());
+		//创建订单失败
+		if(result != 1) {
+			logger.info("updateStock CREATE_ORDER_ERROR. seckill_id={},phone={}", seckill_id, phone);
+			throw new SeckillException(SeckillStateEnum.CREATE_ORDER_ERROR);
+		}
+		//减库存
+		result = seckillGoodsDao.reduceSeckillNum(seckill_id);
+		if(result != 1) {
+			logger.info("updateStock reduceSeckillNum. seckill_id={},phone={}", seckill_id, phone);
+			throw new SeckillException(SeckillStateEnum.CREATE_ORDER_ERROR);
+		}
+		
+		logger.info("updateStock CREATE_ORDER_SUCCESS. seckill_id={},phone={}", seckill_id, phone);
+	}
 
 }

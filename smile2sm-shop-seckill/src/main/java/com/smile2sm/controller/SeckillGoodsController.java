@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.smile2sm.annotation.ExtRateLimiter;
 import com.smile2sm.dto.Result;
-import com.smile2sm.entity.SeckillExposer;
+import com.smile2sm.dto.SeckillExposer;
 import com.smile2sm.entity.SeckillGoods;
 import com.smile2sm.enums.SeckillStateEnum;
 import com.smile2sm.exception.SeckillException;

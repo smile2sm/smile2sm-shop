@@ -30,8 +30,6 @@ public class MQConfig {
 	@Bean
 	public Queue queue() {
 		Queue queue2 = new Queue(SECKILL_QUEUE, true);
-		
-		
 		return queue2;
 	}
 	

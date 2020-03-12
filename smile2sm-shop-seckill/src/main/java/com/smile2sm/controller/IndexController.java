@@ -21,4 +21,8 @@ public class IndexController {
 		jedis.close();
 		return "html/index";
 	}
+	@RequestMapping("/")
+	public String HomeController() {
+		return "html/index";
+	}
 }

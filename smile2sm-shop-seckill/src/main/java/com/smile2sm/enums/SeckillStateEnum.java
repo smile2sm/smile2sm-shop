@@ -3,7 +3,7 @@ package com.smile2sm.enums;
 /**
  * 枚举表述常量数据
  */
-public enum SeckillStateEnum {
+public enum SeckillStateEnum{
 	
     SECKILL_SUCCESS(0, "秒杀成功"),
     
@@ -13,15 +13,19 @@ public enum SeckillStateEnum {
     
     REDIS_ERROR(50002, "没秒杀到"),
     
-    ENQUEUE_PRE_SECKILL(50003, "排队中..."),
+    SECKILL_QUEUE(50003, "排队中..."),
     
     SECKILL_END(50004, "秒杀已结束"),
     
-    REPEAT_KILL(50005, "重复秒杀"),
+    SECKILL_REPEAT(50005, "重复秒杀"),
     
     ACCESS_LIMIT(50006, "没抢到"),
 	
-	RUNTIME_ERROR(50007, "没秒杀到");
+	RUNTIME_ERROR(50007, "没秒杀到"),
+	
+	ORDER_ERROR(50008, "不存在订单"),
+	
+	CREATE_ORDER_ERROR(50009, "支付失败");
 
     private int code;
     private String msg;

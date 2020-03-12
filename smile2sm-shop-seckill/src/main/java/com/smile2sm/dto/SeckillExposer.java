@@ -1,4 +1,4 @@
-package com.smile2sm.entity;
+package com.smile2sm.dto;
 
 public class SeckillExposer {
 

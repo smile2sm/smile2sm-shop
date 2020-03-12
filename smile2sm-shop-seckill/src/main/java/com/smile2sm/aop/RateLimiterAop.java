@@ -17,8 +17,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.alibaba.fastjson.JSON;
 import com.google.common.util.concurrent.RateLimiter;
 import com.smile2sm.annotation.ExtRateLimiter;
+import com.smile2sm.dto.Result;
+import com.smile2sm.enums.SeckillStateEnum;
 /**
  * RateLimiter 
  * 令牌桶限流Aop切面
@@ -71,7 +74,10 @@ public class RateLimiterAop {
 	private void fallBack(ServletRequestAttributes servletRequestAttributes) throws IOException {
 		HttpServletResponse response = servletRequestAttributes.getResponse();
 		PrintWriter writer = response.getWriter();
-		writer.write("服务器忙，请稍后重试！");
+		//服务降级提示
+		SeckillStateEnum accessLimit = SeckillStateEnum.ACCESS_LIMIT;
+		String resultStr = JSON.toJSONString(Result.setResult(accessLimit));
+		writer.write(resultStr);
 		writer.flush();
 		writer.close();
 	}

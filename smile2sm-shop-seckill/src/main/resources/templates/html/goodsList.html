@@ -3,7 +3,7 @@
 
 
 <head>
-    <title></title>
+    <title>商品列表</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- 引入 Bootstrap -->
     <link href="http://apps.bdimg.com/libs/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet">
@@ -21,7 +21,7 @@
 
 <div class="locate">
     <div class="detail-grid">
-        <a href="https://github.com/liushaoming/jseckill" target="_blank">
+        <a href="https://github.com/smile2sm/smile2sm-shop" target="_blank">
             　　<img style="position: fixed; top: -7px; right: -7px; border: 0;"
                    src="/image/sys/forkme.png" alt="Fork me on GitHub"
                    data-canonical-src="/image/sys/forkme.png">
@@ -32,11 +32,11 @@
 
 <div class="container">
     <div>
-        <h2>jseckill秒杀系统</h2>
-        <iframe src="https://ghbtns.com/github-btn.html?user=liushaoming&repo=jseckill&type=star&count=true&size=large"
+        <h2>smile2sm-shop秒杀系统</h2>
+        <iframe src="https://ghbtns.com/github-btn.html?user=smile2sm&repo=smile2sm-shop&type=star&count=true&size=large"
                 frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
 
-        <iframe src="https://ghbtns.com/github-btn.html?user=liushaoming&repo=jseckill&type=fork&count=true&size=large"
+        <iframe src="https://ghbtns.com/github-btn.html?user=smile2sm&repo=smile2sm-shop&type=fork&count=true&size=large"
                 frameborder="0" scrolling="0" width="158px" height="30px"></iframe>
     </div>
 
@@ -65,7 +65,7 @@
                     <td th:text="${#dates.format(sk.seckill_start_time, 'yyyy-MM-dd HH:mm')}"></td>
                     <td th:text="${#dates.format(sk.seckill_end_time, 'yyyy-MM-dd HH:mm')}"></td>
                     <td>
-                        <a class="btn btn-info" th:href=" '/goodDetail?seckill_id=' + ${sk.seckill_id} "
+                        <a class="btn btn-info" th:href=" '/seckill/goodDetail/' + ${sk.seckill_id} "
                            target="_blank">秒杀</a>
                     </td>
                 </tr>

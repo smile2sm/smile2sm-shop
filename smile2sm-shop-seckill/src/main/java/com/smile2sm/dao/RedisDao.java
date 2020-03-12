@@ -24,12 +24,12 @@ public class RedisDao {
 	public List<SeckillGoods> getAllSeckillGoods(){
 		Jedis jedis = jedisPool.getResource();
 		//取出所有seckill_id
-		Set<String> set = jedis.smembers("SECKILL_GOODS_IDSET:");
+		Set<String> set = jedis.smembers(RedisKey.SECKILL_IDSET);
 		if(!set.isEmpty()) {
 			List<SeckillGoods> list = new ArrayList<>();
 			for (String seckill_id:set) {
 				//取出对应的json字符串
-				String string = jedis.get("SECKILL_GOODS_ID:"+seckill_id);
+				String string = jedis.get(RedisKey.SECKILL_ID+seckill_id);
 				SeckillGoods seckillGoods = JSON.parseObject(string, SeckillGoods.class);
 				//更新库存
 				String seckill_num = jedis.get(RedisKey.SECKILL_STOCK + seckill_id);
@@ -52,9 +52,9 @@ public class RedisDao {
 			SeckillGoods seckillGoods = listSeckillGoods.get(i);
 			String jsonString = JSON.toJSONString(seckillGoods);
 			//设置redis缓存数据
-			jedis.set("SECKILL_GOODS_ID:"+seckillGoods.getSeckill_id(), jsonString);
+			jedis.set(RedisKey.SECKILL_ID+seckillGoods.getSeckill_id(), jsonString);
 			jedis.set(RedisKey.SECKILL_STOCK + seckillGoods.getSeckill_id(), ""+seckillGoods.getSeckill_num());
-			jedis.sadd("SECKILL_GOODS_IDSET:", seckillGoods.getSeckill_id()+"");
+			jedis.sadd(RedisKey.SECKILL_IDSET, seckillGoods.getSeckill_id()+"");
 		}
 		jedis.close();
 	}

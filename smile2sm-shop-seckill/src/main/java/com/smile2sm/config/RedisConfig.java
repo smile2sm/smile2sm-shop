@@ -10,6 +10,10 @@ import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
+/**
+ * redis参数配置
+ *
+ */
 @Configuration
 public class RedisConfig {
 
