@@ -131,6 +131,39 @@ RateLimiterAop.java代码 <br/>
 如果没有秒杀过且还有库存，则把seckill_id和phone封装成一条消息发送到RabbitMQ，请求变成被顺序串行处理 <br/>
 立即返回状态“排队中”到客户端上，客户端上回显示“排队中...” <br/>
 
+```java
+public SeckillStateEnum executeSeckill(long seckill_id, String phone,String md5) throws SeckillException{
+		
+		//验证数据是否被篡改
+		if((!StringUtils.isEmpty(md5))&& (getMd5(seckill_id)).equals(md5)) {
+			throw new SeckillException(SeckillStateEnum.MD5_ERROR);
+		}
+		
+		Jedis jedis = jedisPool.getResource();
+		String StockStr = jedis.get(RedisKey.SECKILL_STOCK + seckill_id);
+		int skillStock = Integer.valueOf(StockStr);
+		//判断是否已经秒杀到
+		if (jedis.sismember(RedisKey.SECKILL_USERS + seckill_id, String.valueOf(phone))) {
+			jedis.close();
+			// 重复秒杀
+			logger.info("SECKILL_REPEAT. seckill_id={},phone={}", seckill_id, phone);
+			throw new SeckillException(SeckillStateEnum.SECKILL_REPEAT);	
+		}
+		//是否已经秒杀完
+		if (skillStock <= 0) {
+			jedis.close();
+			logger.info("SECKILL_OUT. seckill_id={},phone={}", seckill_id, phone);
+			throw new SeckillException(SeckillStateEnum.SECKILL_OUT);
+		}else {
+			jedis.close();
+			// 进入待秒杀队列，进行后续串行操作
+			logger.info("SECKILL_QUEUE. seckill_id={},phone={}", seckill_id, phone);
+			mQProducer.send(MQConfig.SECKILL_QUEUE, seckill_id+","+phone);
+			return SeckillStateEnum.SECKILL_QUEUE;
+		}
+	}
+```
+
 4.后台监听RabbitMQ里消息，每次取一条消息，并解析后，请求Redis做库存减1操作（decr命令） <br/>
 如果减库存成功，则在Redis里记录下库存成功的用户手机号phone.
 ```java
