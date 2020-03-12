@@ -1,4 +1,4 @@
-### smilm2sm-shop
+## smilm2sm-shop
 
 ### 1.总体架构
 
@@ -28,27 +28,27 @@
 
 源码<br/>
 ```java
-	public SeckillExposer exposer(long seckill_id) {
-		
-		//读取出redis中对应seckill_id的商品数据
-		Jedis jedis = jedisPool.getResource();
-		String string = jedis.get(RedisKey.SECKILL_ID+seckill_id);
-		jedis.close();
-		//数据为空，秒杀没准备好或者数据已被删除
-		if(StringUtils.isEmpty(string)) return new SeckillExposer(false, seckill_id);
-		
-		SeckillGoods seckillGoods = JSON.parseObject(string, SeckillGoods.class);
-		long start_time = seckillGoods.getSeckill_start_time().getTime();
-		long end_time = seckillGoods.getSeckill_end_time().getTime();
-		long now = new Date().getTime();
-		
-		//秒杀未开始或者秒杀已结束
-		if (start_time > now || end_time < now) {
-			return new SeckillExposer(false, seckill_id, start_time, end_time, now);
-		}
-		//输出对应的md5值
-		return new SeckillExposer(true, seckill_id,getMd5(seckill_id));
+public SeckillExposer exposer(long seckill_id) {
+
+	//读取出redis中对应seckill_id的商品数据
+	Jedis jedis = jedisPool.getResource();
+	String string = jedis.get(RedisKey.SECKILL_ID+seckill_id);
+	jedis.close();
+	//数据为空，秒杀没准备好或者数据已被删除
+	if(StringUtils.isEmpty(string)) return new SeckillExposer(false, seckill_id);
+
+	SeckillGoods seckillGoods = JSON.parseObject(string, SeckillGoods.class);
+	long start_time = seckillGoods.getSeckill_start_time().getTime();
+	long end_time = seckillGoods.getSeckill_end_time().getTime();
+	long now = new Date().getTime();
+
+	//秒杀未开始或者秒杀已结束
+	if (start_time > now || end_time < now) {
+		return new SeckillExposer(false, seckill_id, start_time, end_time, now);
 	}
+	//输出对应的md5值
+	return new SeckillExposer(true, seckill_id,getMd5(seckill_id));
+}
 ```
 
 ### 3.后端秒杀处理
@@ -186,34 +186,34 @@ public void handleInRedis(long seckill_id, String phone,String md5) throws Secki
 3.真正在数据减库存，如失败，则可能是库存已经为0<br/>
 源码<br/>
 ```java
-	@Transactional
-	public void updateStock(long seckill_id, String phone) throws SeckillException {
-		Jedis jedis = jedisPool.getResource();
-		String boughtKey = RedisKey.SECKILL_USERS + seckill_id;
-		//判断是否秒杀到
-		if (!jedis.sismember(boughtKey, phone)) {
-			jedis.close();
-			logger.info("updateStock ORDER_ERROR. seckill_id={},phone={}", seckill_id, phone);
-			//没秒杀到，异常订单
-			throw new SeckillException(SeckillStateEnum.ORDER_ERROR);
-		}
-		jedis.close();	
-		//插入订单
-		int result = payOrderDao.insertPayOrder(seckill_id, phone,1, new Date());
-		//创建订单失败
-		if(result != 1) {
-			logger.info("updateStock CREATE_ORDER_ERROR. seckill_id={},phone={}", seckill_id, phone);
-			throw new SeckillException(SeckillStateEnum.CREATE_ORDER_ERROR);
-		}
-		//减库存
-		result = seckillGoodsDao.reduceSeckillNum(seckill_id);
-		if(result != 1) {
-			logger.info("updateStock reduceSeckillNum. seckill_id={},phone={}", seckill_id, phone);
-			throw new SeckillException(SeckillStateEnum.CREATE_ORDER_ERROR);
-		}
-		
-		logger.info("updateStock CREATE_ORDER_SUCCESS. seckill_id={},phone={}", seckill_id, phone);
+@Transactional
+public void updateStock(long seckill_id, String phone) throws SeckillException {
+	Jedis jedis = jedisPool.getResource();
+	String boughtKey = RedisKey.SECKILL_USERS + seckill_id;
+	//判断是否秒杀到
+	if (!jedis.sismember(boughtKey, phone)) {
+		jedis.close();
+		logger.info("updateStock ORDER_ERROR. seckill_id={},phone={}", seckill_id, phone);
+		//没秒杀到，异常订单
+		throw new SeckillException(SeckillStateEnum.ORDER_ERROR);
 	}
+	jedis.close();	
+	//插入订单
+	int result = payOrderDao.insertPayOrder(seckill_id, phone,1, new Date());
+	//创建订单失败
+	if(result != 1) {
+		logger.info("updateStock CREATE_ORDER_ERROR. seckill_id={},phone={}", seckill_id, phone);
+		throw new SeckillException(SeckillStateEnum.CREATE_ORDER_ERROR);
+	}
+	//减库存
+	result = seckillGoodsDao.reduceSeckillNum(seckill_id);
+	if(result != 1) {
+		logger.info("updateStock reduceSeckillNum. seckill_id={},phone={}", seckill_id, phone);
+		throw new SeckillException(SeckillStateEnum.CREATE_ORDER_ERROR);
+	}
+
+	logger.info("updateStock CREATE_ORDER_SUCCESS. seckill_id={},phone={}", seckill_id, phone);
+  }
 ```
 <br/>
 
