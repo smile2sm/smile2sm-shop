@@ -4,7 +4,7 @@
 
 系统部署图
 <br/><br/><br/><br/>
-![](doc/image/arch-1.jpg)
+![image](https://github.com/smile2sm/smile2sm-shop/doc/image/arch-1.jpg)
 <br/>
 <br/>
 
