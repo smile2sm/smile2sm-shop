@@ -124,26 +124,18 @@ RateLimiterAop.java代码 <br/>
 ```
 
 #### 3.2 Redis执行秒杀
-
-秒杀步骤流程图
-
-![](doc/image/arch-secki.png)
-
-1.流程图Step1：先经过Nginx负载均衡和分流
-
-2.Google guava RateLimiter限流。 并发量大的时候，直接舍弃掉大部分用户的请求
-
-3.Redis判断是否秒杀过。避免重复秒杀。如果没有秒杀过 <br/>
-把用户名（这里是手机号）和seckillId封装成一条消息发送到RabbitMQ，请求变成被顺序串行处理 <br/>
+<br/>
+1.根据md5值判断是否数据是否被篡改。<br/>
+2.Redis判断是否秒杀过,避免重复秒杀。<br/>
+3.Redis判断是否还有库存，没有库存直接返回‘已售完’。<br/>
+如果没有秒杀过且还有库存，则把seckill_id和phone封装成一条消息发送到RabbitMQ，请求变成被顺序串行处理 <br/>
 立即返回状态“排队中”到客户端上，客户端上回显示“排队中...” <br/>
+
+4.后台监听RabbitMQ里消息，每次取一条消息，并解析后，请求Redis做库存减1操作（decr命令） <br/>
+如果减库存成功，则在Redis里记录下库存成功的用户手机号phone.
 ```java
-public void handleInRedis(long seckill_id, String phone,String md5) throws SeckillException {
-		
-		//验证数据是否被篡改
-		if((!StringUtils.isEmpty(md5))&& (getMd5(seckill_id)).equals(md5)) {
-			throw new SeckillException(SeckillStateEnum.MD5_ERROR);
-		}
-		
+public void handleInRedis(long seckill_id, String phone) throws SeckillException {
+
 		Jedis jedis = jedisPool.getResource();
 
 		String stockKey = RedisKey.SECKILL_STOCK + seckill_id;
@@ -166,17 +158,14 @@ public void handleInRedis(long seckill_id, String phone,String md5) throws Secki
 		}
 		//存在问题：当前库存减一，而添加秒杀成功没有时失败了该怎么处理
 		jedis.decr(stockKey);
-		jedis.sadd(boughtKey, String.valueOf(phone));
+		jedis.sadd(boughtKey, phone);
 		jedis.close();
 		logger.info("handleInRedis SECKILL_SUCCESS. seckill_id={},phone={}", seckill_id, phone);
 	}
 
 ```
-4.后台监听RabbitMQ里消息，每次取一条消息，并解析后，请求Redis做库存减1操作（decr命令） <br/>
-并手动ACK队列 
-如果减库存成功，则在Redis里记录下库存成功的用户手机号userPhone.
 
-5.流程图Step2：客户端排队成功后，定时请求后台查询是否秒杀成功，后面会去查询Redis是否秒杀成功 <br/>
+5.客户端排队成功后，定时请求后台查询是否秒杀成功，查询Redis是否秒杀成功 <br/>
 
 
 #### 3.3 付款后实际减库存
