@@ -4,7 +4,7 @@
 
 系统部署图
 <br/><br/><br/><br/>
-![image](https://github.com/smile2sm/smile2sm-shop/blob/master/doc/image/img1.png)
+![](doc/image/img1.png)
 <br/>
 <br/>
 
@@ -127,7 +127,7 @@ RateLimiterAop.java代码 <br/>
 
 秒杀步骤流程图
 
-![](doc/image/arch-seckill.png)
+![](doc/image/arch-secki.png)
 
 1.流程图Step1：先经过Nginx负载均衡和分流
 
