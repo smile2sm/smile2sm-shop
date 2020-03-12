@@ -15,8 +15,8 @@ var seckill = {
             return '/seckill/exposer/' + seckill_id;
         },
         /** 执行秒杀地址*/
-        execution: function (seckillUrl,seckill_id, phone) {
-            return '/seckill/'+seckillUrl+'/' + seckill_id + '/' + phone;
+        execution: function (seckill_id, phone,md5) {
+            return '/seckill/executeSeckill/' + seckill_id + '/' + phone+'/'+md5;
         },
         /** 查询秒杀结果*/
         isGrab: function (seckill_id, phone) {
@@ -38,9 +38,8 @@ var seckill = {
                     if (exposer.exposed) {
                         //开启秒杀
                         seckill.VAL.seckill_id = seckill_id;
-                        var seckillUrl = exposer.seckill_url;
                         var phone = $.cookie('seckillPhone');
-                        var killUrl = seckill.URL.execution(seckillUrl,seckill_id, phone);
+                        var killUrl = seckill.URL.execution(seckill_id, phone,exposer.md5);
                         console.log("killUrl:" + killUrl);
                         
                         /** 绑定一次点击事件,执行秒杀*/

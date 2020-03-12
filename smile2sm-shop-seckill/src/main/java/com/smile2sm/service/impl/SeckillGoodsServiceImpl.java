@@ -22,6 +22,7 @@ import com.smile2sm.enums.SeckillStateEnum;
 import com.smile2sm.exception.SeckillException;
 import com.smile2sm.mq.MQProducer;
 import com.smile2sm.service.SeckillGoodsService;
+import com.smile2sm.utils.MD5Util;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -96,38 +97,39 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 			return new SeckillExposer(false, seckill_id, start_time, end_time, now);
 		}
 		
-		return new SeckillExposer(true, seckill_id,getMd5());
+		return new SeckillExposer(true, seckill_id,MD5Util.getMd5(seckill_id));
 	}
-	
+
 	/**
 	 * 执行秒杀
 	 */
-	public SeckillStateEnum executeSeckill(long seckill_id, String phone){
+	public SeckillStateEnum executeSeckill(long seckill_id, String phone,String md5) throws SeckillException{
 		
-		Jedis jedis = jedisPool.getResource();
-		
-		String StockStr = jedis.get(RedisKey.SECKILL_STOCK + seckill_id);
-		
-		int skillStock = Integer.valueOf(StockStr);
-		
-		if (skillStock <= 0) {
-			jedis.close();
-			logger.info("SECKILL_OUT. seckill_id={},phone={}", seckill_id, phone);
-			return SeckillStateEnum.SECKILL_OUT;
+		//验证数据是否被篡改
+		if(MD5Util.getMd5(seckill_id).equals(md5)) {
+			throw new SeckillException(SeckillStateEnum.MD5_ERROR);
 		}
 		
+		Jedis jedis = jedisPool.getResource();
+		String StockStr = jedis.get(RedisKey.SECKILL_STOCK + seckill_id);
+		int skillStock = Integer.valueOf(StockStr);
+		//判断是否已经秒杀到
 		if (jedis.sismember(RedisKey.SECKILL_USERS + seckill_id, String.valueOf(phone))) {
 			jedis.close();
 			// 重复秒杀
 			logger.info("SECKILL_REPEAT. seckill_id={},phone={}", seckill_id, phone);
-			return SeckillStateEnum.SECKILL_REPEAT;
-		} else {
+			throw new SeckillException(SeckillStateEnum.SECKILL_REPEAT);	
+		}
+		//是否已经秒杀完
+		if (skillStock <= 0) {
+			jedis.close();
+			logger.info("SECKILL_OUT. seckill_id={},phone={}", seckill_id, phone);
+			throw new SeckillException(SeckillStateEnum.SECKILL_OUT);
+		}else {
 			jedis.close();
 			// 进入待秒杀队列，进行后续串行操作
 			logger.info("SECKILL_QUEUE. seckill_id={},phone={}", seckill_id, phone);
-			
 			mQProducer.send(MQConfig.SECKILL_QUEUE, seckill_id+","+phone);
-
 			return SeckillStateEnum.SECKILL_QUEUE;
 		}
 	}

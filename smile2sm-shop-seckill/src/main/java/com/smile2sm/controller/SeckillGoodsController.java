@@ -61,15 +61,15 @@ public class SeckillGoodsController {
 	
 	@SuppressWarnings("rawtypes")
 	@ResponseBody
-	@RequestMapping("executeSeckill/{seckill_id}/{phone}")
+	@RequestMapping("executeSeckill/{seckill_id}/{phone}/{md5}")
 	@ExtRateLimiter(permitsPerSecond = 2,timeout = 2)
-	public Result executeSeckill(@PathVariable long seckill_id,@PathVariable String phone) {
+	public Result executeSeckill(@PathVariable long seckill_id,@PathVariable String phone,@PathVariable String md5) {
 		if("".equals(phone) ||phone == null) {
 			return Result.setResult(SeckillStateEnum.USER_LOGOUT);
 		}
 		SeckillStateEnum seckillStateEnum = null;
 		try {
-			seckillStateEnum = seckillGoodsService.executeSeckill(seckill_id, phone);
+			seckillStateEnum = seckillGoodsService.executeSeckill(seckill_id,phone,md5);
 		}catch (SeckillException e1) {
 			seckillStateEnum = e1.getSeckillStateEnum();
 		}catch (Exception e2) {

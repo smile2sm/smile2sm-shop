@@ -13,7 +13,7 @@ public interface SeckillGoodsService {
 	
 	SeckillGoods getSeckillGoodsDetail(long goods_id);
 	
-	SeckillStateEnum executeSeckill(long seckill_id,String phone);
+	SeckillStateEnum executeSeckill(long seckill_id,String phone,String md5) throws SeckillException;
 
 	void handleInRedis(long seckillId, String phone) throws SeckillException;
 
