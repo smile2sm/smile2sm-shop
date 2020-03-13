@@ -26,7 +26,10 @@ import com.smile2sm.utils.MD5Util;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-
+/**
+ * 秒杀处理业务
+ *
+ */
 @Component
 public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());

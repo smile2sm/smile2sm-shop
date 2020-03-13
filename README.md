@@ -1,4 +1,4 @@
-## smilm2sm-shop
+## smilm2sm-shop 秒杀系统
 
 ### 1.总体架构
 
@@ -7,6 +7,12 @@
 ![](doc/image/img1.png)
 <br/>
 <br/>
+秒杀流程图
+<br/><br/><br/><br/>
+![](doc/image/seckill.png)
+<br/>
+<br/>
+
 
 秒杀进行的过程如下：<br/>
 步骤一：触发秒杀。用户通过点击秒杀按钮，后台把对应秒杀信息推送到MQ<br/>
